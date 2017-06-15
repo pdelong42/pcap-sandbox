@@ -4,7 +4,9 @@
 
 static int count = 0;
 
-void callback( u_char *user, const struct pcap_pkthdr *h, const u_char *bytes ) {
+void callback( u_char *useless,
+               const struct pcap_pkthdr *h,
+               const u_char *bytes ) {
    ++count;
 }
 
