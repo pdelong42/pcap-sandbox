@@ -26,7 +26,11 @@ int main( int argc, char **argv ) {
       exit( EXIT_FAILURE );
    }
 
-   int ret = pcap_loop( cap_data, 0, callback, NULL );
+   int ret;
+
+   do {
+      ret = pcap_loop( cap_data, 0, callback, NULL );
+   } while( ret > 0 );
 
    if( ret == -1 ) {
       printf( "ERROR: %s - aborting\n", errbuf );
