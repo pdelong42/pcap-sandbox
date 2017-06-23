@@ -7,6 +7,22 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+void process_address( pcap_addr_t *address ) {
+
+   struct sockaddr_in *addr = (struct sockaddr_in *)address->addr;
+
+   if( addr->sin_family != AF_INET ) return;
+
+   char *ip = inet_ntoa( addr->sin_addr );
+
+   if( ip == NULL ) {
+      perror( "inet_ntoa" );
+      return;
+   }
+
+   printf( "\tIP: %s\n", ip );
+}
+
 void process_device( pcap_if_t *dev_p ) {
 
    printf( "name: %s\n", dev_p->name );
@@ -19,23 +35,7 @@ void process_device( pcap_if_t *dev_p ) {
 
    while( address != NULL ) {
 
-      struct sockaddr_in *addr = (struct sockaddr_in *)address->addr;
-
-      if( addr->sin_family != AF_INET ) {
-         pcap_addr_t *temp_addr_p = address->next;
-         address = temp_addr_p;
-         continue;
-      }
-
-      char *ip = inet_ntoa( addr->sin_addr );
-
-      if( ip == NULL ) {
-         perror( "inet_ntoa" );
-         exit( EXIT_FAILURE );
-      }
-
-      printf( "\tIP: %s\n", ip );
-
+      process_address( address );
       pcap_addr_t *temp_addr_p = address->next;
       address = temp_addr_p;
    }
