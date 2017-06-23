@@ -8,39 +8,9 @@
 #include <arpa/inet.h>
 
 void process_address( pcap_addr_t *address ) {
-
-   struct sockaddr_in *addr = (struct sockaddr_in *)address->addr;
-
-   if( addr->sin_family != AF_INET ) return;
-
-   char *ip = inet_ntoa( addr->sin_addr );
-
-   if( ip == NULL ) {
-      perror( "inet_ntoa" );
-      return;
-   }
-
-   printf( "\tIP: %s\n", ip );
 }
 
-void process_device( pcap_if_t *dev_p ) {
-
-   printf( "name: %s\n", dev_p->name );
-
-   if( dev_p->description != NULL ) {
-      printf( "description: %s\n", dev_p->description );
-   }
-
-   pcap_addr_t *address = dev_p->addresses;
-
-   while( address != NULL ) {
-
-      process_address( address );
-      pcap_addr_t *temp_addr_p = address->next;
-      address = temp_addr_p;
-   }
-
-   int flags = dev_p->flags;
+void process_flags( int flags ) {
 
    if( ~flags ) return;
    printf( "\tflags:" );
@@ -51,29 +21,68 @@ void process_device( pcap_if_t *dev_p ) {
    printf( "\n" );
 }
 
+void process_inet_addr( struct in_addr inet_addr ) {
+
+   char *ip = inet_ntoa( inet_addr );
+
+   if( ip == NULL ) {
+      perror( "inet_ntoa" );
+      return;
+   }
+
+   printf( "\tIP: %s\n", ip );
+}
+
+void process_remaining_addresses( pcap_addr_t *address ) {
+
+   if( address == NULL ) return;
+
+   struct sockaddr_in *addr = (struct sockaddr_in *)address->addr;
+
+   switch( addr->sin_family ) {
+
+   case AF_INET:
+      process_inet_addr( addr->sin_addr );
+      break;
+
+   default:
+      printf( "\tunrecognized address family\n" );
+   }
+
+   process_remaining_addresses( address->next );
+}
+
+void process_remaining_devices( pcap_if_t *dev_p ) {
+
+   if( dev_p == NULL ) return;
+
+   printf( "name: %s\n", dev_p->name );
+
+   if( dev_p->description != NULL ) {
+      printf( "description: %s\n", dev_p->description );
+   }
+
+   process_remaining_addresses( dev_p->addresses );
+   process_flags( dev_p->flags );
+   process_remaining_devices( dev_p->next );
+}
+
 int main( int argc, char **argv ) {
 
    char errbuf[PCAP_ERRBUF_SIZE];
 
-   pcap_if_t *current_dev_p;
+   pcap_if_t *dev_p;
 
-   int ret = pcap_findalldevs( &current_dev_p, errbuf );
-
-   pcap_if_t *first_dev_p = current_dev_p;
+   int ret = pcap_findalldevs( &dev_p, errbuf );
 
    if( ret == -1 || ret != 0 ) {
       printf( "ERROR: %s - aborting\n", errbuf );
       exit( EXIT_FAILURE );
    }
 
-   while( current_dev_p != NULL ) {
+   process_remaining_devices( dev_p );
 
-      process_device( current_dev_p );
-      pcap_if_t *temp_dev_p = current_dev_p->next;
-      current_dev_p = temp_dev_p;
-   }
-
-   pcap_freealldevs( first_dev_p );
+   pcap_freealldevs( dev_p );
 
    exit( EXIT_SUCCESS );
 }
