@@ -7,7 +7,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-void process_flags( int flags ) {
+void print_flags( int flags ) {
 
    if( ~flags ) return;
    printf( "\tflags:" );
@@ -18,7 +18,7 @@ void process_flags( int flags ) {
    printf( "\n" );
 }
 
-void process_inet_addr( struct in_addr inet_addr ) {
+void print_inet_addr( struct in_addr inet_addr ) {
 
    char *ip = inet_ntoa( inet_addr );
 
@@ -30,7 +30,7 @@ void process_inet_addr( struct in_addr inet_addr ) {
    printf( "\tIP: %s\n", ip );
 }
 
-void process_remaining_addresses( pcap_addr_t *address ) {
+void print_remaining_addresses( pcap_addr_t *address ) {
 
    if( address == NULL ) return;
 
@@ -39,17 +39,17 @@ void process_remaining_addresses( pcap_addr_t *address ) {
    switch( addr->sin_family ) {
 
    case AF_INET:
-      process_inet_addr( addr->sin_addr );
+      print_inet_addr( addr->sin_addr );
       break;
 
    default:
       printf( "\tunrecognized address family %d\n", addr->sin_family );
    }
 
-   process_remaining_addresses( address->next );
+   print_remaining_addresses( address->next );
 }
 
-void process_remaining_devices( pcap_if_t *dev_p ) {
+void print_remaining_devices( pcap_if_t *dev_p ) {
 
    if( dev_p == NULL ) return;
 
@@ -59,9 +59,9 @@ void process_remaining_devices( pcap_if_t *dev_p ) {
       printf( "description: %s\n", dev_p->description );
    }
 
-   process_remaining_addresses( dev_p->addresses );
-   process_flags( dev_p->flags );
-   process_remaining_devices( dev_p->next );
+   print_remaining_addresses( dev_p->addresses );
+   print_flags( dev_p->flags );
+   print_remaining_devices( dev_p->next );
 }
 
 int main( int argc, char **argv ) {
@@ -77,7 +77,7 @@ int main( int argc, char **argv ) {
       exit( EXIT_FAILURE );
    }
 
-   process_remaining_devices( dev_p );
+   print_remaining_devices( dev_p );
 
    pcap_freealldevs( dev_p );
 
