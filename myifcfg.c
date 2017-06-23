@@ -30,6 +30,22 @@ void print_inet_addr( struct sockaddr_in *inet_addr ) {
    printf( "\tIP: %s\n", ip );
 }
 
+void print_inet6_addr( struct sockaddr_in6 *inet_addr ) {
+
+   char *addr = (char *)&inet_addr->sin6_addr;
+   char *ip = malloc( INET6_ADDRSTRLEN * sizeof(char) );
+
+   // this feels like a horrible hack
+   ip = (char *)inet_ntop( AF_INET6, addr, ip, INET6_ADDRSTRLEN );
+
+   if( ip == NULL ) {
+      perror( "inet_ntop" );
+      return;
+   }
+
+   printf( "\tIPv6: %s\n", ip );
+}
+
 void print_remaining_addresses( pcap_addr_t *address ) {
 
    if( address == NULL ) return;
@@ -41,6 +57,10 @@ void print_remaining_addresses( pcap_addr_t *address ) {
 
    case AF_INET:
       print_inet_addr( (struct sockaddr_in *)addr );
+      break;
+
+   case AF_INET6:
+      print_inet6_addr( (struct sockaddr_in6 *)addr );
       break;
 
    default:
