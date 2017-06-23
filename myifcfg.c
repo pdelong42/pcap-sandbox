@@ -43,7 +43,7 @@ void process_remaining_addresses( pcap_addr_t *address ) {
       break;
 
    default:
-      printf( "\tunrecognized address family\n" );
+      printf( "\tunrecognized address family %d\n", addr->sin_family );
    }
 
    process_remaining_addresses( address->next );
