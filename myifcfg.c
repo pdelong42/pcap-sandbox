@@ -7,15 +7,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-void print_flags( int flags ) {
 
-   if( ~flags ) return;
-   printf( "\tflags:" );
-   if( flags & PCAP_IF_LOOPBACK ) printf( " LOOPBACK" );
-   //if( flags & PCAP_IF_UP )       printf( " UP" );
-   //if( flags & PCAP_IF_RUNNING )  printf( " RUNNING" );
-   // the manpage lies, on MacOS anyhow
-   printf( "\n" );
+void print_description( char *description ) {
+   if( description == NULL ) return;
+   printf( "\tdescription: %s\n", description );
 }
 
 void print_inet_addr( struct sockaddr_in *inet_addr ) {
@@ -69,6 +64,16 @@ void print_remaining_addresses( pcap_addr_t *address ) {
 
    print_remaining_addresses( address->next );
 }
+void print_flags( int flags ) {
+
+   if( ~flags ) return;
+   printf( "\tflags:" );
+   if( flags & PCAP_IF_LOOPBACK ) printf( " LOOPBACK" );
+   //if( flags & PCAP_IF_UP )       printf( " UP" );
+   //if( flags & PCAP_IF_RUNNING )  printf( " RUNNING" );
+   // the manpage lies, on MacOS anyhow
+   printf( "\n" );
+}
 
 void print_remaining_devices( pcap_if_t *dev_p ) {
 
@@ -76,13 +81,10 @@ void print_remaining_devices( pcap_if_t *dev_p ) {
 
    printf( "name: %s\n", dev_p->name );
 
-   if( dev_p->description != NULL ) {
-      printf( "description: %s\n", dev_p->description );
-   }
-
+   print_description(         dev_p->description );
    print_remaining_addresses( dev_p->addresses );
-   print_flags( dev_p->flags );
-   print_remaining_devices( dev_p->next );
+   print_flags(               dev_p->flags );
+   print_remaining_devices(   dev_p->next );
 }
 
 int main( int argc, char **argv ) {
