@@ -30,15 +30,22 @@ void print_inet6_addr( struct sockaddr_in6 *inet_addr ) {
    char *addr = (char *)&inet_addr->sin6_addr;
    char *ip = malloc( INET6_ADDRSTRLEN * sizeof(char) );
 
+   if( ip == NULL ) {
+      perror( "malloc" );
+      return;
+   }
+
    // this feels like a horrible hack
    ip = (char *)inet_ntop( AF_INET6, addr, ip, INET6_ADDRSTRLEN );
 
    if( ip == NULL ) {
+      free( ip );
       perror( "inet_ntop" );
       return;
    }
 
    printf( "\tIPv6: %s\n", ip );
+   free( ip );
 }
 
 void print_remaining_addresses( pcap_addr_t *address ) {
