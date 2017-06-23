@@ -42,7 +42,8 @@ void process_device( pcap_if_t *dev_p ) {
 
    int flags = dev_p->flags;
 
-   if( flags )                    printf( "\tflags:" );
+   if( ~flags ) return;
+   printf( "\tflags:" );
    if( flags & PCAP_IF_LOOPBACK ) printf( " LOOPBACK" );
    //if( flags & PCAP_IF_UP )       printf( " UP" );
    //if( flags & PCAP_IF_RUNNING )  printf( " RUNNING" );
@@ -68,7 +69,6 @@ int main( int argc, char **argv ) {
    while( current_dev_p != NULL ) {
 
       process_device( current_dev_p );
-   
       pcap_if_t *temp_dev_p = current_dev_p->next;
       current_dev_p = temp_dev_p;
    }
