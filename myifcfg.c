@@ -18,9 +18,9 @@ void print_flags( int flags ) {
    printf( "\n" );
 }
 
-void print_inet_addr( struct in_addr inet_addr ) {
+void print_inet_addr( struct sockaddr_in *inet_addr ) {
 
-   char *ip = inet_ntoa( inet_addr );
+   char *ip = inet_ntoa( inet_addr->sin_addr );
 
    if( ip == NULL ) {
       perror( "inet_ntoa" );
@@ -34,16 +34,17 @@ void print_remaining_addresses( pcap_addr_t *address ) {
 
    if( address == NULL ) return;
 
-   struct sockaddr_in *addr = (struct sockaddr_in *)address->addr;
+   struct sockaddr *addr = address->addr;
+   sa_family_t family = addr->sa_family;
 
-   switch( addr->sin_family ) {
+   switch( family ) {
 
    case AF_INET:
-      print_inet_addr( addr->sin_addr );
+      print_inet_addr( (struct sockaddr_in *)addr );
       break;
 
    default:
-      printf( "\tunrecognized address family %d\n", addr->sin_family );
+      printf( "\tunrecognized address family %d\n", family );
    }
 
    print_remaining_addresses( address->next );
