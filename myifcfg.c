@@ -7,9 +7,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-void process_address( pcap_addr_t *address ) {
-}
-
 void process_flags( int flags ) {
 
    if( ~flags ) return;
