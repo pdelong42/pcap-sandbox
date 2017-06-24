@@ -5,8 +5,8 @@
 #include <errno.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <net/if_dl.h>
 #include <arpa/inet.h>
-
 
 void print_description( char *description ) {
    if( description == NULL ) return;
@@ -48,6 +48,18 @@ void print_inet6_addr( struct sockaddr_in6 *inet_addr ) {
    free( ip );
 }
 
+void print_link_addr( struct sockaddr_dl *link_addr ) {
+
+   char *mac = link_ntoa( link_addr );
+
+   if( mac == NULL ) {
+      perror( "link_ntoa" );
+      return;
+   }
+
+   printf( "\tMAC: %s\n", mac );
+}
+
 void print_remaining_addresses( pcap_addr_t *address ) {
 
    if( address == NULL ) return;
@@ -63,6 +75,10 @@ void print_remaining_addresses( pcap_addr_t *address ) {
 
    case AF_INET6:
       print_inet6_addr( (struct sockaddr_in6 *)addr );
+      break;
+
+   case AF_LINK:
+      print_link_addr( (struct sockaddr_dl *)addr );
       break;
 
    default:
