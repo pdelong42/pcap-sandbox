@@ -5,8 +5,11 @@
 #include <errno.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <net/if_dl.h>
 #include <arpa/inet.h>
+
+#ifdef __APPLE__
+#   include <net/if_dl.h>
+#endif
 
 void print_description( char *description ) {
    if( description == NULL ) return;
@@ -48,6 +51,8 @@ void print_inet6_addr( struct sockaddr_in6 *inet_addr ) {
    free( ip );
 }
 
+#ifdef __APPLE__
+
 void print_link_addr( struct sockaddr_dl *link_addr ) {
 
    char *mac = link_ntoa( link_addr );
@@ -56,9 +61,16 @@ void print_link_addr( struct sockaddr_dl *link_addr ) {
       perror( "link_ntoa" );
       return;
    }
-
    printf( "\tMAC: %s\n", mac );
 }
+
+#else
+
+void print_link_addr( void *link_addr ) {
+   printf( "\nMAC: unimplemented\n" );
+}
+
+#endif
 
 void print_remaining_addresses( pcap_addr_t *address ) {
 
