@@ -89,9 +89,11 @@ void print_remaining_addresses( pcap_addr_t *address ) {
       print_inet6_addr( (struct sockaddr_in6 *)addr );
       break;
 
+#ifdef __APPLE__
    case AF_LINK:
       print_link_addr( (struct sockaddr_dl *)addr );
       break;
+#endif
 
    default:
       printf( "\tunrecognized address family %d\n", family );
