@@ -9,6 +9,8 @@
 
 #ifdef __APPLE__
 #   include <net/if_dl.h>
+#else
+#   include <netinet/ether.h>
 #endif
 
 void print_description( char *description ) {
@@ -66,11 +68,22 @@ void print_link_addr( struct sockaddr_dl *link_addr ) {
 
 #else
 
-void print_link_addr( void *link_addr ) {
-   printf( "\nMAC: unimplemented\n" );
+void print_link_addr( struct ether_addr *ether_addr ) {
+
+   char *mac = ether_ntoa( ether_addr );
+
+   if( mac == NULL ) {
+      perror( "ether_ntoa" );
+      return;
+   }
+   printf( "\tMAC: %s\n", mac );
 }
 
 #endif
+
+//void print_link_addr( void *link_addr ) {
+//   printf( "\nMAC: unimplemented\n" );
+//}
 
 void print_remaining_addresses( pcap_addr_t *address ) {
 
@@ -93,6 +106,10 @@ void print_remaining_addresses( pcap_addr_t *address ) {
    case AF_LINK:
       print_link_addr( (struct sockaddr_dl *)addr );
       break;
+#else
+   case AF_PACKET:
+      print_link_addr( (struct ether_addr *)addr );
+      break;
 #endif
 
    default:
@@ -101,14 +118,16 @@ void print_remaining_addresses( pcap_addr_t *address ) {
 
    print_remaining_addresses( address->next );
 }
+
 void print_flags( int flags ) {
 
    if( ~flags ) return;
    printf( "\tflags:" );
    if( flags & PCAP_IF_LOOPBACK ) printf( " LOOPBACK" );
-   //if( flags & PCAP_IF_UP )       printf( " UP" );
-   //if( flags & PCAP_IF_RUNNING )  printf( " RUNNING" );
-   // the manpage lies, on MacOS anyhow
+#ifndef __APPLE__
+   if( flags & PCAP_IF_UP )       printf( " UP" );
+   if( flags & PCAP_IF_RUNNING )  printf( " RUNNING" );
+#endif
    printf( "\n" );
 }
 
