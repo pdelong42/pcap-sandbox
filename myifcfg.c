@@ -1,16 +1,24 @@
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <pcap.h>
 #include <pcap/pcap.h>
-#include <errno.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 
 #ifdef __APPLE__
 #   include <net/if_dl.h>
+#   define AF_CUSTOM1 AF_LINK
+#   define MAC_NTOA link_ntoa
+#   define MAC_NTOA_STR "link_ntoa"
+#   define MAC_SOCKADDR sockaddr_dl
 #else
 #   include <netinet/ether.h>
+#   define AF_CUSTOM1 AF_PACKET
+#   define MAC_NTOA ether_ntoa
+#   define MAC_NTOA_STR "ether_ntoa"
+#   define MAC_SOCKADDR ether_addr
 #endif
 
 void print_description( char *description ) {
@@ -40,7 +48,7 @@ void print_inet6_addr( struct sockaddr_in6 *inet_addr ) {
       return;
    }
 
-   // this feels like a horrible hack
+   // this feels like a terrible hack
    ip = (char *)inet_ntop( AF_INET6, addr, ip, INET6_ADDRSTRLEN );
 
    if( ip == NULL ) {
@@ -53,33 +61,17 @@ void print_inet6_addr( struct sockaddr_in6 *inet_addr ) {
    free( ip );
 }
 
-#ifdef __APPLE__
+void print_link_addr( struct sockaddr *addr ) {
 
-void print_link_addr( struct sockaddr_dl *link_addr ) {
-
-   char *mac = link_ntoa( link_addr );
+   char *mac = MAC_NTOA( (struct MAC_SOCKADDR *)addr );
 
    if( mac == NULL ) {
-      perror( "link_ntoa" );
+      perror( MAC_NTOA_STR );
       return;
    }
+
    printf( "\tMAC: %s\n", mac );
 }
-
-#else
-
-void print_link_addr( struct ether_addr *ether_addr ) {
-
-   char *mac = ether_ntoa( ether_addr );
-
-   if( mac == NULL ) {
-      perror( "ether_ntoa" );
-      return;
-   }
-   printf( "\tMAC: %s\n", mac );
-}
-
-#endif
 
 //void print_link_addr( void *link_addr ) {
 //   printf( "\nMAC: unimplemented\n" );
@@ -102,15 +94,9 @@ void print_remaining_addresses( pcap_addr_t *address ) {
       print_inet6_addr( (struct sockaddr_in6 *)addr );
       break;
 
-#ifdef __APPLE__
-   case AF_LINK:
-      print_link_addr( (struct sockaddr_dl *)addr );
+   case AF_CUSTOM1:
+      print_link_addr( addr );
       break;
-#else
-   case AF_PACKET:
-      print_link_addr( (struct ether_addr *)addr );
-      break;
-#endif
 
    default:
       printf( "\tunrecognized address family %d\n", family );
@@ -138,9 +124,9 @@ void print_remaining_devices( pcap_if_t *dev_p ) {
    printf( "name: %s\n", dev_p->name );
 
    print_description(         dev_p->description );
-   print_remaining_addresses( dev_p->addresses );
-   print_flags(               dev_p->flags );
-   print_remaining_devices(   dev_p->next );
+   print_remaining_addresses( dev_p->addresses   );
+   print_flags(               dev_p->flags       );
+   print_remaining_devices(   dev_p->next        );
 }
 
 int main( int argc, char **argv ) {
