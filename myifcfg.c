@@ -52,7 +52,6 @@ void print_inet6_addr( struct sockaddr_in6 *inet_addr ) {
    ip = (char *)inet_ntop( AF_INET6, addr, ip, INET6_ADDRSTRLEN );
 
    if( ip == NULL ) {
-      free( ip );
       perror( "inet_ntop" );
       return;
    }
