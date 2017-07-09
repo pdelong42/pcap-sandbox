@@ -76,31 +76,34 @@ void print_link_addr( struct sockaddr *addr ) {
 //   printf( "\nMAC: unimplemented\n" );
 //}
 
-void print_remaining_addresses( pcap_addr_t *address ) {
+void print_current_address( struct sockaddr *address ) {
 
-   if( address == NULL ) return;
-
-   struct sockaddr *addr = address->addr;
-   sa_family_t family = addr->sa_family;
+   sa_family_t family = address->sa_family;
 
    switch( family ) {
 
    case AF_INET:
-      print_inet_addr( (struct sockaddr_in *)addr );
+      print_inet_addr( (struct sockaddr_in *)address );
       break;
 
    case AF_INET6:
-      print_inet6_addr( (struct sockaddr_in6 *)addr );
+      print_inet6_addr( (struct sockaddr_in6 *)address );
       break;
 
    case AF_CUSTOM1:
-      print_link_addr( addr );
+      print_link_addr( address );
       break;
 
    default:
       printf( "\tunrecognized address family %d\n", family );
    }
+}
 
+void print_remaining_addresses( pcap_addr_t *address ) {
+
+   if( address == NULL ) return;
+
+   print_current_address(     address->addr );
    print_remaining_addresses( address->next );
 }
 
