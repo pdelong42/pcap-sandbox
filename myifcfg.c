@@ -78,6 +78,8 @@ void print_link_addr( struct sockaddr *addr ) {
 
 void print_current_address( struct sockaddr *address ) {
 
+   if( address == NULL ) return;
+
    sa_family_t family = address->sa_family;
 
    switch( family ) {
@@ -103,8 +105,11 @@ void print_remaining_addresses( pcap_addr_t *address ) {
 
    if( address == NULL ) return;
 
-   print_current_address(     address->addr );
-   print_remaining_addresses( address->next );
+   print_current_address(     address->addr      );
+   print_current_address(     address->broadaddr );
+   print_current_address(     address->netmask   );
+   print_current_address(     address->dstaddr   );
+   print_remaining_addresses( address->next      );
 }
 
 void print_flags( int flags ) {
