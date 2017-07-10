@@ -35,7 +35,7 @@ void print_inet_addr( struct sockaddr_in *inet_addr ) {
       return;
    }
 
-   printf( "\tIP: %s\n", ip );
+   printf( "\t%s(IP)", ip );
 }
 
 void print_inet6_addr( struct sockaddr_in6 *inet_addr ) {
@@ -56,7 +56,7 @@ void print_inet6_addr( struct sockaddr_in6 *inet_addr ) {
       return;
    }
 
-   printf( "\tIPv6: %s\n", ip );
+   printf( "\t%s(IPv6)", ip );
    free( ip );
 }
 
@@ -69,7 +69,7 @@ void print_link_addr( struct sockaddr *addr ) {
       return;
    }
 
-   printf( "\tMAC: %s\n", mac );
+   printf( "\t%s(MAC)", mac );
 }
 
 //void print_link_addr( void *link_addr ) {
@@ -109,6 +109,7 @@ void print_remaining_addresses( pcap_addr_t *address ) {
    print_current_address(     address->broadaddr );
    print_current_address(     address->netmask   );
    print_current_address(     address->dstaddr   );
+   printf( "\n" );
    print_remaining_addresses( address->next      );
 }
 
