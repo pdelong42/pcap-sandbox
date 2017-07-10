@@ -117,10 +117,11 @@ void print_flags( int flags ) {
    if( ~flags ) return;
    printf( "\tflags:" );
    if( flags & PCAP_IF_LOOPBACK ) printf( " LOOPBACK" );
-#ifndef __APPLE__
-   if( flags & PCAP_IF_UP )       printf( " UP" );
-   if( flags & PCAP_IF_RUNNING )  printf( " RUNNING" );
-#endif
+
+// These are not defined until 1.6.0, and I'm using an old version
+//   if( flags & PCAP_IF_UP )       printf( " UP" );
+//   if( flags & PCAP_IF_RUNNING )  printf( " RUNNING" );
+
    printf( "\n" );
 }
 
