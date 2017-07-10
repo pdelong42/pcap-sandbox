@@ -114,7 +114,7 @@ void print_remaining_addresses( pcap_addr_t *address ) {
 
 void print_flags( int flags ) {
 
-   if( ~flags ) return;
+   if( flags == 0 ) return;
    printf( "\tflags:" );
    if( flags & PCAP_IF_LOOPBACK ) printf( " LOOPBACK" );
 
