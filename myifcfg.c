@@ -100,7 +100,7 @@ void print_current_address( struct sockaddr *address, char *label ) {
       break;
 
    default:
-      printf( "\tunrecognized address family %d\n", family );
+      printf( "\t(unrecognized address family %d)", family );
    }
 }
 
