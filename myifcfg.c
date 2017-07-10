@@ -35,7 +35,7 @@ void print_inet_addr( struct sockaddr_in *inet_addr ) {
       return;
    }
 
-   printf( "\t%s(IP)", ip );
+   printf( "\t%s", ip );
 }
 
 void print_inet6_addr( struct sockaddr_in6 *inet_addr ) {
@@ -56,7 +56,7 @@ void print_inet6_addr( struct sockaddr_in6 *inet_addr ) {
       return;
    }
 
-   printf( "\t%s(IPv6)", ip );
+   printf( "\t%s", ip );
    free( ip );
 }
 
@@ -69,14 +69,14 @@ void print_link_addr( struct sockaddr *addr ) {
       return;
    }
 
-   printf( "\t%s(MAC)", mac );
+   printf( "\t%s", mac );
 }
 
 //void print_link_addr( void *link_addr ) {
 //   printf( "\nMAC: unimplemented\n" );
 //}
 
-void print_current_address( struct sockaddr *address ) {
+void print_current_address( struct sockaddr *address, char *label ) {
 
    if( address == NULL ) return;
 
@@ -86,14 +86,17 @@ void print_current_address( struct sockaddr *address ) {
 
    case AF_INET:
       print_inet_addr( (struct sockaddr_in *)address );
+      printf( "(IP %s)", label );
       break;
 
    case AF_INET6:
       print_inet6_addr( (struct sockaddr_in6 *)address );
+      printf( "(IPv6 %s)", label );
       break;
 
    case AF_CUSTOM1:
       print_link_addr( address );
+      printf( "(MAC %s)", label );
       break;
 
    default:
@@ -105,12 +108,12 @@ void print_remaining_addresses( pcap_addr_t *address ) {
 
    if( address == NULL ) return;
 
-   print_current_address(     address->addr      );
-   print_current_address(     address->broadaddr );
-   print_current_address(     address->netmask   );
-   print_current_address(     address->dstaddr   );
+   print_current_address( address->addr,      "unicast"     );
+   print_current_address( address->broadaddr, "broadcast"   );
+   print_current_address( address->netmask,   "netmask"     );
+   print_current_address( address->dstaddr,   "destination" );
    printf( "\n" );
-   print_remaining_addresses( address->next      );
+   print_remaining_addresses( address->next );
 }
 
 void print_flags( int flags ) {
