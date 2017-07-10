@@ -84,6 +84,7 @@ void print_current_address( struct sockaddr *address, char *label ) {
 
    switch( family ) {
 
+   case AF_UNSPEC:
    case AF_INET:
       print_inet_addr( (struct sockaddr_in *)address );
       printf( "(IP %s)", label );
