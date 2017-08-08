@@ -3,12 +3,21 @@
 #include <string.h>
 #include <time.h>
 #include <pcap/pcap.h>
+#include <net/ethernet.h>
 
 static int count = 0;
 
 void callback( u_char *useless,
                const struct pcap_pkthdr *h,
                const u_char *bytes ) {
+
+   struct ether_header *eptr = (struct ether_header *)bytes;
+
+   printf( "%d: src MAC = %s; dst MAC = %s\n",
+      count,
+      ether_ntoa( (const struct ether_addr *)eptr->ether_shost ),
+      ether_ntoa( (const struct ether_addr *)eptr->ether_dhost ) );
+
    ++count;
 }
 
