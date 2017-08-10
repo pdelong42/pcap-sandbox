@@ -5,6 +5,20 @@
 #include <pcap/pcap.h>
 #include <net/ethernet.h>
 
+#ifdef __APPLE__
+#   include <net/if_dl.h>
+#   define AF_CUSTOM1 AF_LINK
+#   define MAC_NTOA link_ntoa
+#   define MAC_NTOA_STR "link_ntoa"
+#   define MAC_SOCKADDR sockaddr_dl
+#else
+#   include <netinet/ether.h>
+#   define AF_CUSTOM1 AF_PACKET
+#   define MAC_NTOA ether_ntoa
+#   define MAC_NTOA_STR "ether_ntoa"
+#   define MAC_SOCKADDR ether_addr
+#endif
+
 static int count = 0;
 
 void callback( u_char *useless,
