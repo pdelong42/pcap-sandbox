@@ -12,6 +12,7 @@
 #   define MAC_NTOA_STR "link_ntoa"
 #   define MAC_SOCKADDR sockaddr_dl
 #else
+#   include <arpa/inet.h>
 #   include <netinet/ether.h>
 #   define AF_CUSTOM1 AF_PACKET
 #   define MAC_NTOA ether_ntoa
@@ -27,8 +28,41 @@ void callback( u_char *useless,
 
    struct ether_header *eptr = (struct ether_header *)bytes;
 
-   printf( "%d: src MAC = %s; dst MAC = %s\n",
-      count,
+   printf( "%d: type = ", count );
+
+   int swapped = ntohs( eptr->ether_type );
+
+   // there are more ether types than this, but I'm only handling ones
+   // I expect to see
+
+   switch( swapped ) {
+   case ETHERTYPE_IP:
+      printf( "IP" );
+      break;
+   case ETHERTYPE_ARP:
+      printf( "ARP" );
+      break;
+   case ETHERTYPE_REVARP:
+      printf( "RARP" );
+      break;
+   case ETHERTYPE_VLAN:
+      printf( "802.1Q" );
+      break;
+   case ETHERTYPE_IPX:
+      printf( "IPX" );
+      break;
+   case ETHERTYPE_IPV6:
+      printf( "IPv6" );
+      break;
+   case ETHERTYPE_LOOPBACK:
+      printf( "loopback" );
+      break;
+   default:
+      printf( "0x%x", swapped );
+      break;
+   }
+
+   printf( "; src MAC = %s; dst MAC = %s\n",
       ether_ntoa( (const struct ether_addr *)eptr->ether_shost ),
       ether_ntoa( (const struct ether_addr *)eptr->ether_dhost ) );
 
