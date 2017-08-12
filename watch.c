@@ -29,7 +29,10 @@ int handle_ethernet( const u_char *packet ) {
 
    struct ether_header *eptr = (struct ether_header *)packet;
 
-   printf( "%d: type = ", count );
+   printf( "%d: MAC src = %s; MAC dst = %s; ",
+      count,
+      ether_ntoa( (const struct ether_addr *)eptr->ether_shost ),
+      ether_ntoa( (const struct ether_addr *)eptr->ether_dhost ) );
 
    int swapped = ntohs( eptr->ether_type );
 
@@ -59,10 +62,6 @@ int handle_ethernet( const u_char *packet ) {
       printf( "0x%x", swapped );
       break;
    }
-
-   printf( "; src MAC = %s; dst MAC = %s\n",
-      ether_ntoa( (const struct ether_addr *)eptr->ether_shost ),
-      ether_ntoa( (const struct ether_addr *)eptr->ether_dhost ) );
 }
 
 void callback( u_char *useless,
@@ -70,6 +69,7 @@ void callback( u_char *useless,
                const u_char *packet ) {
 
    handle_ethernet( packet );
+   printf( "\n" );
    ++count;
 }
 
