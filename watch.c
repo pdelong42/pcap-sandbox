@@ -11,10 +11,19 @@
 #   define AF_CUSTOM1 AF_LINK
 #else
 #   include <netinet/ether.h>
+#   include <netinet/ip.h>
 #   define AF_CUSTOM1 AF_PACKET
 #endif
 
 static int count = 0;
+
+int handle_inet( const u_char *packet ) {
+
+   struct ip *iptr = (struct ip *)packet;
+   printf( "IP src = %s; IP dst = %s",
+      inet_ntoa( iptr->ip_src ),
+      inet_ntoa( iptr->ip_dst ) );
+}
 
 int handle_ethernet( const u_char *packet ) {
 
@@ -29,7 +38,7 @@ int handle_ethernet( const u_char *packet ) {
 
    switch( swapped ) {
    case ETHERTYPE_IP:
-      printf( "IP" );
+      handle_inet( packet + sizeof( struct ether_header ) );
       break;
    case ETHERTYPE_ARP:
       printf( "ARP" );
