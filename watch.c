@@ -48,9 +48,6 @@ void callback( u_char *useless,
    case ETHERTYPE_VLAN:
       printf( "802.1Q" );
       break;
-   case ETHERTYPE_IPX:
-      printf( "IPX" );
-      break;
    case ETHERTYPE_IPV6:
       printf( "IPv6" );
       break;
