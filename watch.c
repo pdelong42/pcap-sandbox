@@ -16,11 +16,9 @@
 
 static int count = 0;
 
-void callback( u_char *useless,
-               const struct pcap_pkthdr *h,
-               const u_char *bytes ) {
+int handle_ethernet( const u_char *packet ) {
 
-   struct ether_header *eptr = (struct ether_header *)bytes;
+   struct ether_header *eptr = (struct ether_header *)packet;
 
    printf( "%d: type = ", count );
 
@@ -56,7 +54,13 @@ void callback( u_char *useless,
    printf( "; src MAC = %s; dst MAC = %s\n",
       ether_ntoa( (const struct ether_addr *)eptr->ether_shost ),
       ether_ntoa( (const struct ether_addr *)eptr->ether_dhost ) );
+}
 
+void callback( u_char *useless,
+               const struct pcap_pkthdr *h,
+               const u_char *packet ) {
+
+   handle_ethernet( packet );
    ++count;
 }
 
