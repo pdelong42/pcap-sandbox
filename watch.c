@@ -5,13 +5,13 @@
 #include <pcap/pcap.h>
 #include <net/ethernet.h>
 #include <arpa/inet.h>
+#include <netinet/ip.h>
 
 #ifdef __APPLE__
 #   include <net/if_dl.h>
 #   define AF_CUSTOM1 AF_LINK
 #else
 #   include <netinet/ether.h>
-#   include <netinet/ip.h>
 #   define AF_CUSTOM1 AF_PACKET
 #endif
 
