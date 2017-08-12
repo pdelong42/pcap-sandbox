@@ -3,22 +3,17 @@
 #include <stdlib.h>
 #include <pcap.h>
 #include <pcap/pcap.h>
-#include <arpa/inet.h>
+#include <net/ethernet.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <sys/socket.h>
 
 #ifdef __APPLE__
 #   include <net/if_dl.h>
 #   define AF_CUSTOM1 AF_LINK
-#   define MAC_NTOA link_ntoa
-#   define MAC_NTOA_STR "link_ntoa"
-#   define MAC_SOCKADDR sockaddr_dl
 #else
 #   include <netinet/ether.h>
 #   define AF_CUSTOM1 AF_PACKET
-#   define MAC_NTOA ether_ntoa
-#   define MAC_NTOA_STR "ether_ntoa"
-#   define MAC_SOCKADDR ether_addr
 #endif
 
 void print_description( char *description ) {
@@ -62,10 +57,10 @@ void print_inet6_addr( struct sockaddr_in6 *inet_addr ) {
 
 void print_link_addr( struct sockaddr *addr ) {
 
-   char *mac = MAC_NTOA( (struct MAC_SOCKADDR *)addr );
+   char *mac = ether_ntoa( (struct ether_addr *)addr );
 
    if( mac == NULL ) {
-      perror( MAC_NTOA_STR );
+      perror( "ether_ntoa" );
       return;
    }
 
