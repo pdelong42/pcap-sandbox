@@ -4,6 +4,7 @@
 #include <time.h>
 #include <pcap/pcap.h>
 #include <net/ethernet.h>
+#include <arpa/inet.h>
 
 #ifdef __APPLE__
 #   include <net/if_dl.h>
@@ -12,7 +13,6 @@
 #   define MAC_NTOA_STR "link_ntoa"
 #   define MAC_SOCKADDR sockaddr_dl
 #else
-#   include <arpa/inet.h>
 #   include <netinet/ether.h>
 #   define AF_CUSTOM1 AF_PACKET
 #   define MAC_NTOA ether_ntoa
