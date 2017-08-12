@@ -17,7 +17,7 @@
 
 static int count = 0;
 
-int handle_inet( const u_char *packet ) {
+void handle_inet( const u_char *packet ) {
 
    struct ip *iptr = (struct ip *)packet;
    printf( "IP src = %s; IP dst = %s",
@@ -25,7 +25,7 @@ int handle_inet( const u_char *packet ) {
       inet_ntoa( iptr->ip_dst ) );
 }
 
-int handle_ethernet( const u_char *packet ) {
+void handle_ethernet( const u_char *packet ) {
 
    struct ether_header *eptr = (struct ether_header *)packet;
 
