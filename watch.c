@@ -19,13 +19,41 @@
 
 static int count = 0;
 
+char *handle_undef( int ether_type ) {
+
+   char *stringp_out;
+
+   int ret = asprintf( &stringp_out, "0x%x", ether_type );
+
+   if( ret < 0 ) {
+      printf( "allocation error - exiting" );
+      exit( EXIT_FAILURE );
+   }
+
+   return( stringp_out );
+}
+
+char *handle_minimal( const char *label ) {
+
+   char *stringp_out;
+
+   int ret = asprintf( &stringp_out, "%s", label );
+
+   if( ret < 0 ) {
+      printf( "allocation error - exiting" );
+      exit( EXIT_FAILURE );
+   }
+
+   return( stringp_out );
+}
+
 char *handle_inet( const u_char *packet ) {
 
-   char *stringp;
+   char *stringp_out;
    struct ip *iptr = (struct ip *)packet;
 
    int ret = asprintf(
-      &stringp,
+      &stringp_out,
       "IP src = %s; IP dst = %s",
       inet_ntoa( iptr->ip_src ),
       inet_ntoa( iptr->ip_dst ) );
@@ -35,56 +63,67 @@ char *handle_inet( const u_char *packet ) {
       exit( EXIT_FAILURE );
    }
 
-   return( stringp );
+   return( stringp_out );
 }
 
-void handle_ethernet( const u_char *packet ) {
+char *handle_ethernet( const u_char *packet ) {
 
-   char *stringp;
+   char *stringp_in, *stringp_out;
    struct ether_header *eptr = (struct ether_header *)packet;
    int swapped = ntohs( eptr->ether_type );
+   const u_char *payload = packet + sizeof( struct ether_header );
 
-   printf( "%d: MAC src = %s; MAC dst = %s; ",
-      count,
-      ether_ntoa( (const struct ether_addr *)eptr->ether_shost ),
-      ether_ntoa( (const struct ether_addr *)eptr->ether_dhost ) );
-
-   // there are more ether types than this, but I'm only handling ones
-   // I expect to see
+   // there are more ether types than this, but I'm only handling the
+   // ones I expect to see
 
    switch( swapped ) {
    case ETHERTYPE_IP:
-      stringp = handle_inet( packet + sizeof( struct ether_header ) );
-      printf( "%s", stringp );
-      free( stringp );
+      stringp_in = handle_inet( payload );
       break;
    case ETHERTYPE_ARP:
-      printf( "ARP" );
+      stringp_in = handle_minimal( "ARP" );
       break;
    case ETHERTYPE_REVARP:
-      printf( "RARP" );
+      stringp_in = handle_minimal( "RARP" );
       break;
    case ETHERTYPE_VLAN:
-      printf( "802.1Q" );
+      stringp_in = handle_minimal( "802.1Q" );
       break;
    case ETHERTYPE_IPV6:
-      printf( "IPv6" );
+      stringp_in = handle_minimal( "IPv6" );
       break;
    case ETHERTYPE_LOOPBACK:
-      printf( "loopback" );
+      stringp_in = handle_minimal( "loopback" );
       break;
    default:
-      printf( "0x%x", swapped );
+      stringp_in = handle_undef( swapped );
       break;
    }
+
+   int ret = asprintf(
+      &stringp_out,
+      "MAC src = %s; MAC dst = %s; %s",
+      ether_ntoa( (const struct ether_addr *)eptr->ether_shost ),
+      ether_ntoa( (const struct ether_addr *)eptr->ether_dhost ),
+      stringp_in );
+
+   free( stringp_in );
+
+   if( ret < 0 ) {
+      printf( "allocation error - exiting" );
+      exit( EXIT_FAILURE );
+   }
+
+   return( stringp_out );
 }
 
 void callback( u_char *useless,
                const struct pcap_pkthdr *h,
                const u_char *packet ) {
 
-   handle_ethernet( packet );
-   printf( "\n" );
+   char *stringp_in = handle_ethernet( packet );
+   printf( "%d: %s\n", count, stringp_in );
+   free( stringp_in );
    ++count;
 }
 
