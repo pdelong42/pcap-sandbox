@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,31 +19,44 @@
 
 static int count = 0;
 
-void handle_inet( const u_char *packet ) {
+char *handle_inet( const u_char *packet ) {
 
+   char *stringp;
    struct ip *iptr = (struct ip *)packet;
-   printf( "IP src = %s; IP dst = %s",
+
+   int ret = asprintf(
+      &stringp,
+      "IP src = %s; IP dst = %s",
       inet_ntoa( iptr->ip_src ),
       inet_ntoa( iptr->ip_dst ) );
+
+   if( ret < 0 ) {
+      printf( "allocation error - exiting" );
+      exit( EXIT_FAILURE );
+   }
+
+   return( stringp );
 }
 
 void handle_ethernet( const u_char *packet ) {
 
+   char *stringp;
    struct ether_header *eptr = (struct ether_header *)packet;
+   int swapped = ntohs( eptr->ether_type );
 
    printf( "%d: MAC src = %s; MAC dst = %s; ",
       count,
       ether_ntoa( (const struct ether_addr *)eptr->ether_shost ),
       ether_ntoa( (const struct ether_addr *)eptr->ether_dhost ) );
 
-   int swapped = ntohs( eptr->ether_type );
-
    // there are more ether types than this, but I'm only handling ones
    // I expect to see
 
    switch( swapped ) {
    case ETHERTYPE_IP:
-      handle_inet( packet + sizeof( struct ether_header ) );
+      stringp = handle_inet( packet + sizeof( struct ether_header ) );
+      printf( "%s", stringp );
+      free( stringp );
       break;
    case ETHERTYPE_ARP:
       printf( "ARP" );
