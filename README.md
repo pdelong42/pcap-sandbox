@@ -12,6 +12,9 @@ ToDo:
  - pull yourself out of the rabbit-hole of re-implementing ifconfig,
    and get back to the goal of learning libpcap
 
- - figure-out how to use some of the newer sprintf() replacements, to
+ - [DONE] figure-out how to use the relatively recent asprintf(), to
    implement safer string formatting, in order to pass strings up the
    call stack for printing at the top-level
+
+ - decide whether to give the asprintf() treatment to myifcfg.c as
+   well, or if it's fine as it stands
