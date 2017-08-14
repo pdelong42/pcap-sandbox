@@ -23,7 +23,7 @@ char *handle_undef( int ether_type ) {
 
    char *stringp_out;
 
-   int ret = asprintf( &stringp_out, "0x%x", ether_type );
+   int ret = asprintf( &stringp_out, "unhandled ethertype: 0x%x", ether_type );
 
    if( ret < 0 ) {
       printf( "allocation error - exiting" );
