@@ -50,13 +50,13 @@ char *handle_minimal( const char *label ) {
 char *handle_inet( const u_char *packet ) {
 
    char *stringp_out;
-   struct ip *iptr = (struct ip *)packet;
+   struct ip *header = (struct ip *)packet;
 
    int ret = asprintf(
       &stringp_out,
       "IP src = %s; IP dst = %s",
-      inet_ntoa( iptr->ip_src ),
-      inet_ntoa( iptr->ip_dst ) );
+      inet_ntoa( header->ip_src ),
+      inet_ntoa( header->ip_dst ) );
 
    if( ret < 0 ) {
       printf( "allocation error - exiting" );
@@ -69,9 +69,9 @@ char *handle_inet( const u_char *packet ) {
 char *handle_ethernet( const u_char *packet ) {
 
    char *stringp_in, *stringp_out;
-   struct ether_header *eptr = (struct ether_header *)packet;
-   int swapped = ntohs( eptr->ether_type );
+   struct ether_header *header = (struct ether_header *)packet;
    const u_char *payload = packet + sizeof( struct ether_header );
+   int swapped = ntohs( header->ether_type );
 
    // there are more ether types than this, but I'm only handling the
    // ones I expect to see
@@ -103,8 +103,8 @@ char *handle_ethernet( const u_char *packet ) {
    int ret = asprintf(
       &stringp_out,
       "MAC src = %s; MAC dst = %s; %s",
-      ether_ntoa( (const struct ether_addr *)eptr->ether_shost ),
-      ether_ntoa( (const struct ether_addr *)eptr->ether_dhost ),
+      ether_ntoa( (const struct ether_addr *)header->ether_shost ),
+      ether_ntoa( (const struct ether_addr *)header->ether_dhost ),
       stringp_in );
 
    free( stringp_in );
