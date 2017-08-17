@@ -13,8 +13,11 @@ ToDo:
 
  - fix all the error output to print to stderr as is proper
 
- - in watch.c, handle other cases in the switch statement (ARP, RARP,
-   802.1Q, IPv6, and loopback)
+ - in watch.c, handle other cases in the handle_ethernet() switch statement
+   (ARP, RARP, 802.1Q, IPv6 [done], and loopback); and add a switch statement
+   in handle_inet() and handle_ipv6() for descending deeper into
+   transport-layer protocols (e.g., UDP, TCP, ICMP, etc.), but only handle a
+   handful of them because there are lots;
 
  - decide whether to give the asprintf() treatment to myifcfg.c as
    well, or if it's fine as it stands
