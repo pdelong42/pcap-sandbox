@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 #include <time.h>
 #include <pcap/pcap.h>
@@ -20,11 +21,15 @@
 
 static int count = 0;
 
-char *handle_undef( int ether_type ) {
+char *dynamic_printf( const char *fmt, ... ) {
 
+   int ret;
+   va_list ap;
    char *stringp_out;
 
-   int ret = asprintf( &stringp_out, "unhandled ethertype: 0x%x", ether_type );
+   va_start( ap, fmt );
+   ret = vasprintf( &stringp_out, fmt, ap );
+   va_end( ap );
 
    if( ret < 0 ) {
       printf( "allocation error - exiting" );
@@ -34,42 +39,27 @@ char *handle_undef( int ether_type ) {
    return( stringp_out );
 }
 
+char *handle_undef( int ether_type ) {
+   return( dynamic_printf( "unhandled ethertype: 0x%x", ether_type ) );
+}
+
 char *handle_minimal( const char *label ) {
-
-   char *stringp_out;
-
-   int ret = asprintf( &stringp_out, "%s", label );
-
-   if( ret < 0 ) {
-      printf( "allocation error - exiting" );
-      exit( EXIT_FAILURE );
-   }
-
-   return( stringp_out );
+   return( dynamic_printf( "%s", label ) );
 }
 
 char *handle_inet( const u_char *packet ) {
 
-   char *stringp_out;
    struct ip *header = (struct ip *)packet;
 
-   int ret = asprintf(
-      &stringp_out,
-      "IP src = %s; IP dst = %s",
-      inet_ntoa( header->ip_src ),
-      inet_ntoa( header->ip_dst ) );
-
-   if( ret < 0 ) {
-      printf( "allocation error - exiting" );
-      exit( EXIT_FAILURE );
-   }
-
-   return( stringp_out );
+   return(
+      dynamic_printf(
+         "IP src = %s; IP dst = %s",
+         inet_ntoa( header->ip_src ),
+         inet_ntoa( header->ip_dst ) ) );
 }
 
 char *stringify_inet6_addr( struct in6_addr *addr ) {
 
-   char *stringp_out;
    char *ip = malloc( INET6_ADDRSTRLEN * sizeof(char) );
 
    if( ip == NULL ) {
@@ -85,14 +75,9 @@ char *stringify_inet6_addr( struct in6_addr *addr ) {
       exit( EXIT_FAILURE );
    }
 
-   int ret = asprintf( &stringp_out, "%s", ip );
+   char *stringp_out = dynamic_printf( "%s", ip );
 
    free( ip );
-
-   if( ret < 0 ) {
-      printf( "allocation error - exiting" );
-      exit( EXIT_FAILURE );
-   }
 
    return( stringp_out );
 }
@@ -102,10 +87,8 @@ char *handle_ipv6( const u_char *packet ) {
    struct ip6_hdr *header = (struct ip6_hdr *)packet;
    char *stringp_in1 = stringify_inet6_addr( &header->ip6_src );
    char *stringp_in2 = stringify_inet6_addr( &header->ip6_dst );
-   char *stringp_out;
 
-   int ret = asprintf(
-      &stringp_out,
+   char *stringp_out = dynamic_printf(
       "IPv6 src = %s; IPv6 dst = %s",
       stringp_in1,
       stringp_in2 );
@@ -113,17 +96,12 @@ char *handle_ipv6( const u_char *packet ) {
    free( stringp_in1 );
    free( stringp_in2 );
 
-   if( ret < 0 ) {
-      printf( "allocation error - exiting" );
-      exit( EXIT_FAILURE );
-   }
-
    return( stringp_out );
 }
 
 char *handle_ethernet( const u_char *packet ) {
 
-   char *stringp_in, *stringp_out;
+   char *stringp_in;
    struct ether_header *header = (struct ether_header *)packet;
    const u_char *payload = packet + sizeof( struct ether_header );
    int swapped = ntohs( header->ether_type );
@@ -155,19 +133,13 @@ char *handle_ethernet( const u_char *packet ) {
       break;
    }
 
-   int ret = asprintf(
-      &stringp_out,
+   char *stringp_out = dynamic_printf(
       "MAC src = %s; MAC dst = %s; %s",
       ether_ntoa( (const struct ether_addr *)header->ether_shost ),
       ether_ntoa( (const struct ether_addr *)header->ether_dhost ),
       stringp_in );
 
    free( stringp_in );
-
-   if( ret < 0 ) {
-      printf( "allocation error - exiting" );
-      exit( EXIT_FAILURE );
-   }
 
    return( stringp_out );
 }
