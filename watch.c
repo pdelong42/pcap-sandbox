@@ -39,15 +39,15 @@ char *dynamic_printf( const char *fmt, ... ) {
    return( stringp_out );
 }
 
-char *handle_undef( int ether_type ) {
+char *handle_network_undef( int ether_type ) {
    return( dynamic_printf( "unhandled ethertype: 0x%x", ether_type ) );
 }
 
-char *handle_minimal( const char *label ) {
+char *handle_network_minimal( const char *label ) {
    return( dynamic_printf( "%s", label ) );
 }
 
-char *handle_inet( const u_char *packet ) {
+char *handle_network_inet( const u_char *packet ) {
 
    struct ip *header = (struct ip *)packet;
 
@@ -84,7 +84,7 @@ char *stringify_inet6_addr( struct in6_addr *addr ) {
    return( stringp_out );
 }
 
-char *handle_ipv6( const u_char *packet ) {
+char *handle_network_ipv6( const u_char *packet ) {
 
    struct ip6_hdr *header = (struct ip6_hdr *)packet;
    char *stringp_in1 = stringify_inet6_addr( &header->ip6_src );
@@ -110,19 +110,19 @@ char *handle_network_generic( const u_char *payload, int swapped ) {
 
    switch( swapped ) {
    case ETHERTYPE_IP:
-      return( handle_inet( payload ) );
+      return( handle_network_inet( payload ) );
    case ETHERTYPE_ARP:
-      return( handle_minimal( "ARP" ) );
+      return( handle_network_minimal( "ARP" ) );
    case ETHERTYPE_REVARP:
-      return( handle_minimal( "RARP" ) );
+      return( handle_network_minimal( "RARP" ) );
    case ETHERTYPE_VLAN:
-      return( handle_minimal( "802.1Q" ) );
+      return( handle_network_minimal( "802.1Q" ) );
    case ETHERTYPE_IPV6:
-      return( handle_ipv6( payload ) );
+      return( handle_network_ipv6( payload ) );
    case ETHERTYPE_LOOPBACK:
-      return( handle_minimal( "loopback" ) );
+      return( handle_network_minimal( "loopback" ) );
    default:
-      return( handle_undef( swapped ) );
+      return( handle_network_undef( swapped ) );
    }
 }
 
