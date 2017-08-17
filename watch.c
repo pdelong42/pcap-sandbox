@@ -90,7 +90,7 @@ char *stringify_inet6_addr( struct in6_addr *addr ) {
    free( ip );
 
    if( ret < 0 ) {
-      printf( "asprintf" );
+      printf( "allocation error - exiting" );
       exit( EXIT_FAILURE );
    }
 
