@@ -8,6 +8,7 @@
 #include <net/ethernet.h>
 #include <arpa/inet.h>
 #include <netinet/ip.h>
+#include <netinet/ip6.h>
 
 #ifdef __APPLE__
 #   include <net/if_dl.h>
@@ -66,6 +67,60 @@ char *handle_inet( const u_char *packet ) {
    return( stringp_out );
 }
 
+char *stringify_inet6_addr( struct in6_addr *addr ) {
+
+   char *stringp_out;
+   char *ip = malloc( INET6_ADDRSTRLEN * sizeof(char) );
+
+   if( ip == NULL ) {
+      perror( "malloc" );
+      exit( EXIT_FAILURE );
+   }
+
+   // this feels like a terrible hack
+   ip = (char *)inet_ntop( AF_INET6, addr, ip, INET6_ADDRSTRLEN );
+
+   if( ip == NULL ) {
+      perror( "inet_ntop" );
+      exit( EXIT_FAILURE );
+   }
+
+   int ret = asprintf( &stringp_out, "%s", ip );
+
+   free( ip );
+
+   if( ret < 0 ) {
+      printf( "allocation error - exiting" );
+      exit( EXIT_FAILURE );
+   }
+
+   return( stringp_out );
+}
+
+char *handle_ipv6( const u_char *packet ) {
+
+   struct ip6_hdr *header = (struct ip6_hdr *)packet;
+   char *stringp_in1 = stringify_inet6_addr( &header->ip6_src );
+   char *stringp_in2 = stringify_inet6_addr( &header->ip6_dst );
+   char *stringp_out;
+
+   int ret = asprintf(
+      &stringp_out,
+      "IPv6 src = %s; IPv6 dst = %s",
+      stringp_in1,
+      stringp_in2 );
+
+   free( stringp_in1 );
+   free( stringp_in2 );
+
+   if( ret < 0 ) {
+      printf( "allocation error - exiting" );
+      exit( EXIT_FAILURE );
+   }
+
+   return( stringp_out );
+}
+
 char *handle_ethernet( const u_char *packet ) {
 
    char *stringp_in, *stringp_out;
@@ -90,7 +145,7 @@ char *handle_ethernet( const u_char *packet ) {
       stringp_in = handle_minimal( "802.1Q" );
       break;
    case ETHERTYPE_IPV6:
-      stringp_in = handle_minimal( "IPv6" );
+      stringp_in = handle_ipv6( payload );
       break;
    case ETHERTYPE_LOOPBACK:
       stringp_in = handle_minimal( "loopback" );
