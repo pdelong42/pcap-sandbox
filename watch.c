@@ -51,6 +51,8 @@ char *handle_inet( const u_char *packet ) {
 
    struct ip *header = (struct ip *)packet;
 
+   //handle_transport_generic( ... );
+
    return(
       dynamic_printf(
          "IP src = %s; IP dst = %s",
@@ -88,6 +90,8 @@ char *handle_ipv6( const u_char *packet ) {
    char *stringp_in1 = stringify_inet6_addr( &header->ip6_src );
    char *stringp_in2 = stringify_inet6_addr( &header->ip6_dst );
 
+   //handle_transport_generic( ... );
+
    char *stringp_out = dynamic_printf(
       "IPv6 src = %s; IPv6 dst = %s",
       stringp_in1,
@@ -99,39 +103,36 @@ char *handle_ipv6( const u_char *packet ) {
    return( stringp_out );
 }
 
-char *handle_ethernet( const u_char *packet ) {
-
-   char *stringp_in;
-   struct ether_header *header = (struct ether_header *)packet;
-   const u_char *payload = packet + sizeof( struct ether_header );
-   int swapped = ntohs( header->ether_type );
+char *handle_network_generic( const u_char *payload, int swapped ) {
 
    // there are more ether types than this, but I'm only handling the
    // ones I expect to see
 
    switch( swapped ) {
    case ETHERTYPE_IP:
-      stringp_in = handle_inet( payload );
-      break;
+      return( handle_inet( payload ) );
    case ETHERTYPE_ARP:
-      stringp_in = handle_minimal( "ARP" );
-      break;
+      return( handle_minimal( "ARP" ) );
    case ETHERTYPE_REVARP:
-      stringp_in = handle_minimal( "RARP" );
-      break;
+      return( handle_minimal( "RARP" ) );
    case ETHERTYPE_VLAN:
-      stringp_in = handle_minimal( "802.1Q" );
-      break;
+      return( handle_minimal( "802.1Q" ) );
    case ETHERTYPE_IPV6:
-      stringp_in = handle_ipv6( payload );
-      break;
+      return( handle_ipv6( payload ) );
    case ETHERTYPE_LOOPBACK:
-      stringp_in = handle_minimal( "loopback" );
-      break;
+      return( handle_minimal( "loopback" ) );
    default:
-      stringp_in = handle_undef( swapped );
-      break;
+      return( handle_undef( swapped ) );
    }
+}
+
+char *handle_ethernet( const u_char *packet ) {
+
+   struct ether_header *header = (struct ether_header *)packet;
+
+   char *stringp_in = handle_network_generic(
+      packet + sizeof( struct ether_header ),
+      ntohs( header->ether_type )  );
 
    char *stringp_out = dynamic_printf(
       "MAC src = %s; MAC dst = %s; %s",
