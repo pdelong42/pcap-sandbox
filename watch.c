@@ -57,6 +57,8 @@ char *handle_transport_generic( const u_char *payload, int swapped ) {
       return( handle_transport_minimal( "TCP" ) );
    case IPPROTO_UDP:
       return( handle_transport_minimal( "UDP" ) );
+   case IPPROTO_ICMPV6:
+      return( handle_transport_minimal( "ICMPv6" ) );
    default:
       return( handle_transport_undef( swapped ) );
    }
