@@ -56,8 +56,8 @@ char *handle_transport_tcp( const u_char *packet ) {
    return(
       dynamic_printf(
          "TCP src = %d; TCP dst = %d",
-         ntohs( header->source ),
-         ntohs( header->dest ) ) );
+         ntohs( header->th_sport ),
+         ntohs( header->th_dport ) ) );
 }
 
 char *handle_transport_udp( const u_char *packet ) {
@@ -67,13 +67,13 @@ char *handle_transport_udp( const u_char *packet ) {
    return(
       dynamic_printf(
          "UDP src = %d; UDP dst = %d",
-         ntohs( header->source ),
-         ntohs( header->dest ) ) );
+         ntohs( header->uh_sport ),
+         ntohs( header->uh_dport ) ) );
 }
 
 char *handle_transport_generic( const u_char *payload, int type ) {
 
-   // there are more ether types than these, but I'm only handling the
+   // there are more IP types than these, but I'm only handling the
    // ones I expect to see
 
    switch( type ) {
