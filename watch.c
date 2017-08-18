@@ -8,6 +8,7 @@
 #include <pcap/pcap.h>
 #include <net/ethernet.h>
 #include <arpa/inet.h>
+#define __FAVOR_BSD
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
 #include <netinet/tcp.h>
