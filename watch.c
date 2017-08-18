@@ -53,24 +53,22 @@ char *handle_transport_tcp( const u_char *packet ) {
 
    struct tcphdr *header = (struct tcphdr *)packet;
 
-   char *stringp_out = dynamic_printf(
-      "TCP src = %d; TCP dst = %d",
-      ntohs( header->source ),
-      ntohs( header->dest ) );
-
-   return( stringp_out );
+   return(
+      dynamic_printf(
+         "TCP src = %d; TCP dst = %d",
+         ntohs( header->source ),
+         ntohs( header->dest ) ) );
 }
 
 char *handle_transport_udp( const u_char *packet ) {
 
    struct udphdr *header = (struct udphdr *)packet;
 
-   char *stringp_out = dynamic_printf(
-      "UDP src = %d; UDP dst = %d",
-      ntohs( header->source ),
-      ntohs( header->dest ) );
-
-   return( stringp_out );
+   return(
+      dynamic_printf(
+         "UDP src = %d; UDP dst = %d",
+         ntohs( header->source ),
+         ntohs( header->dest ) ) );
 }
 
 char *handle_transport_generic( const u_char *payload, int type ) {
