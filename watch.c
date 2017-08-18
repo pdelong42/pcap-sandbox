@@ -11,6 +11,7 @@
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
 #include <netinet/tcp.h>
+#include <netinet/udp.h>
 
 #ifdef __APPLE__
 #   include <net/if_dl.h>
@@ -60,6 +61,18 @@ char *handle_transport_tcp( const u_char *packet ) {
    return( stringp_out );
 }
 
+char *handle_transport_udp( const u_char *packet ) {
+
+   struct udphdr *header = (struct udphdr *)packet;
+
+   char *stringp_out = dynamic_printf(
+      "UDP src = %d; UDP dst = %d",
+      ntohs( header->source ),
+      ntohs( header->dest ) );
+
+   return( stringp_out );
+}
+
 char *handle_transport_generic( const u_char *payload, int type ) {
 
    // there are more ether types than these, but I'm only handling the
@@ -69,7 +82,7 @@ char *handle_transport_generic( const u_char *payload, int type ) {
    case IPPROTO_TCP:
       return( handle_transport_tcp( payload ) );
    case IPPROTO_UDP:
-      return( handle_transport_minimal( "UDP" ) );
+      return( handle_transport_udp( payload ) );
    case IPPROTO_ICMPV6:
       return( handle_transport_minimal( "ICMPv6" ) );
    default:
@@ -131,6 +144,7 @@ char *stringify_inet6_addr( struct in6_addr *addr ) {
 char *handle_network_ipv6( const u_char *packet ) {
 
    struct ip6_hdr *header = (struct ip6_hdr *)packet;
+
    char *stringp_in1 = stringify_inet6_addr( &header->ip6_src );
    char *stringp_in2 = stringify_inet6_addr( &header->ip6_dst );
 
