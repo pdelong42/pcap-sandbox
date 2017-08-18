@@ -10,6 +10,7 @@
 #include <arpa/inet.h>
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
+#include <netinet/tcp.h>
 
 #ifdef __APPLE__
 #   include <net/if_dl.h>
@@ -47,20 +48,32 @@ char *handle_transport_minimal( const char *label ) {
    return( dynamic_printf( "%s", label ) );
 }
 
-char *handle_transport_generic( const u_char *payload, int swapped ) {
+char *handle_transport_tcp( const u_char *packet ) {
+
+   struct tcphdr *header = (struct tcphdr *)packet;
+
+   char *stringp_out = dynamic_printf(
+      "TCP src = %d; TCP dst = %d",
+      ntohs( header->source ),
+      ntohs( header->dest ) );
+
+   return( stringp_out );
+}
+
+char *handle_transport_generic( const u_char *payload, int type ) {
 
    // there are more ether types than these, but I'm only handling the
    // ones I expect to see
 
-   switch( swapped ) {
+   switch( type ) {
    case IPPROTO_TCP:
-      return( handle_transport_minimal( "TCP" ) );
+      return( handle_transport_tcp( payload ) );
    case IPPROTO_UDP:
       return( handle_transport_minimal( "UDP" ) );
    case IPPROTO_ICMPV6:
       return( handle_transport_minimal( "ICMPv6" ) );
    default:
-      return( handle_transport_undef( swapped ) );
+      return( handle_transport_undef( type ) );
    }
 }
 
