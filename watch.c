@@ -8,8 +8,11 @@
 #include <pcap/pcap.h>
 #include <net/ethernet.h>
 #include <arpa/inet.h>
+#define __FAVOR_BSD
 #include <netinet/ip.h>
 #include <netinet/ip6.h>
+#include <netinet/tcp.h>
+#include <netinet/udp.h>
 
 #ifdef __APPLE__
 #   include <net/if_dl.h>
@@ -39,23 +42,78 @@ char *dynamic_printf( const char *fmt, ... ) {
    return( stringp_out );
 }
 
-char *handle_undef( int ether_type ) {
-   return( dynamic_printf( "unhandled ethertype: 0x%x", ether_type ) );
+char *handle_transport_undef( int ip_type ) {
+   return( dynamic_printf( "unhandled iptype: 0x%x", ip_type ) );
 }
 
-char *handle_minimal( const char *label ) {
+char *handle_transport_minimal( const char *label ) {
    return( dynamic_printf( "%s", label ) );
 }
 
-char *handle_inet( const u_char *packet ) {
+char *handle_transport_tcp( const u_char *packet ) {
 
-   struct ip *header = (struct ip *)packet;
+   struct tcphdr *header = (struct tcphdr *)packet;
 
    return(
       dynamic_printf(
-         "IP src = %s; IP dst = %s",
-         inet_ntoa( header->ip_src ),
-         inet_ntoa( header->ip_dst ) ) );
+         "TCP src = %d; TCP dst = %d",
+         ntohs( header->th_sport ),
+         ntohs( header->th_dport ) ) );
+}
+
+char *handle_transport_udp( const u_char *packet ) {
+
+   struct udphdr *header = (struct udphdr *)packet;
+
+   return(
+      dynamic_printf(
+         "UDP src = %d; UDP dst = %d",
+         ntohs( header->uh_sport ),
+         ntohs( header->uh_dport ) ) );
+}
+
+char *handle_transport_generic( const u_char *payload, int type ) {
+
+   // there are more IP types than these, but I'm only handling the
+   // ones I expect to see
+
+   switch( type ) {
+   case IPPROTO_TCP:
+      return( handle_transport_tcp( payload ) );
+   case IPPROTO_UDP:
+      return( handle_transport_udp( payload ) );
+   case IPPROTO_ICMPV6:
+      return( handle_transport_minimal( "ICMPv6" ) );
+   default:
+      return( handle_transport_undef( type ) );
+   }
+}
+
+char *handle_network_undef( int ether_type ) {
+   return( dynamic_printf( "unhandled ethertype: 0x%x", ether_type ) );
+}
+
+char *handle_network_minimal( const char *label ) {
+   return( dynamic_printf( "%s", label ) );
+}
+
+char *handle_network_inet( const u_char *packet ) {
+
+   struct ip *header = (struct ip *)packet;
+
+   char *stringp_in = handle_transport_generic(
+      packet + sizeof( struct ip ),
+      header->ip_p );
+   
+   char *stringp_out = dynamic_printf(
+      "IP src = %s; IP dst = %s; %s",
+      inet_ntoa( header->ip_src ),
+      inet_ntoa( header->ip_dst ),
+      stringp_in );
+
+   free( stringp_in );
+
+   return( stringp_out );
 }
 
 char *stringify_inet6_addr( struct in6_addr *addr ) {
@@ -82,56 +140,60 @@ char *stringify_inet6_addr( struct in6_addr *addr ) {
    return( stringp_out );
 }
 
-char *handle_ipv6( const u_char *packet ) {
+char *handle_network_ipv6( const u_char *packet ) {
 
    struct ip6_hdr *header = (struct ip6_hdr *)packet;
+
    char *stringp_in1 = stringify_inet6_addr( &header->ip6_src );
    char *stringp_in2 = stringify_inet6_addr( &header->ip6_dst );
 
+   char *stringp_in3 = handle_transport_generic(
+      packet + sizeof( struct ip6_hdr ),
+      header->ip6_nxt );
+
    char *stringp_out = dynamic_printf(
-      "IPv6 src = %s; IPv6 dst = %s",
+      "IPv6 src = %s; IPv6 dst = %s; %s",
       stringp_in1,
-      stringp_in2 );
+      stringp_in2,
+      stringp_in3 );
 
    free( stringp_in1 );
    free( stringp_in2 );
+   free( stringp_in3 );
 
    return( stringp_out );
 }
 
-char *handle_ethernet( const u_char *packet ) {
+char *handle_network_generic( const u_char *payload, int swapped ) {
 
-   char *stringp_in;
-   struct ether_header *header = (struct ether_header *)packet;
-   const u_char *payload = packet + sizeof( struct ether_header );
-   int swapped = ntohs( header->ether_type );
-
-   // there are more ether types than this, but I'm only handling the
+   // there are more ether types than these, but I'm only handling the
    // ones I expect to see
 
    switch( swapped ) {
    case ETHERTYPE_IP:
-      stringp_in = handle_inet( payload );
-      break;
+      return( handle_network_inet( payload ) );
    case ETHERTYPE_ARP:
-      stringp_in = handle_minimal( "ARP" );
-      break;
+      return( handle_network_minimal( "ARP" ) );
    case ETHERTYPE_REVARP:
-      stringp_in = handle_minimal( "RARP" );
-      break;
+      return( handle_network_minimal( "RARP" ) );
    case ETHERTYPE_VLAN:
-      stringp_in = handle_minimal( "802.1Q" );
-      break;
+      return( handle_network_minimal( "802.1Q" ) );
    case ETHERTYPE_IPV6:
-      stringp_in = handle_ipv6( payload );
-      break;
+      return( handle_network_ipv6( payload ) );
    case ETHERTYPE_LOOPBACK:
-      stringp_in = handle_minimal( "loopback" );
-      break;
+      return( handle_network_minimal( "loopback" ) );
    default:
-      stringp_in = handle_undef( swapped );
-      break;
+      return( handle_network_undef( swapped ) );
    }
+}
+
+char *handle_ethernet( const u_char *packet ) {
+
+   struct ether_header *header = (struct ether_header *)packet;
+
+   char *stringp_in = handle_network_generic(
+      packet + sizeof( struct ether_header ),
+      ntohs( header->ether_type ) );
 
    char *stringp_out = dynamic_printf(
       "MAC src = %s; MAC dst = %s; %s",
