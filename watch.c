@@ -187,21 +187,29 @@ char *handle_network_generic( const u_char *payload, int swapped ) {
    }
 }
 
+char *ether_ntoa_nostatic( u_char *ether_host ) {
+   return( strdup( ether_ntoa( (const struct ether_addr *)ether_host ) ) );
+}
+
 char *handle_ethernet( const u_char *packet ) {
 
    struct ether_header *header = (struct ether_header *)packet;
 
-   char *stringp_in = handle_network_generic(
+   char *stringp_in1 = ether_ntoa_nostatic( header->ether_shost );
+   char *stringp_in2 = ether_ntoa_nostatic( header->ether_dhost );
+   char *stringp_in3 = handle_network_generic(
       packet + sizeof( struct ether_header ),
       ntohs( header->ether_type ) );
 
    char *stringp_out = dynamic_printf(
       "MAC src = %s; MAC dst = %s; %s",
-      ether_ntoa( (const struct ether_addr *)header->ether_shost ),
-      ether_ntoa( (const struct ether_addr *)header->ether_dhost ),
-      stringp_in );
+      stringp_in1,
+      stringp_in2,
+      stringp_in3 );
 
-   free( stringp_in );
+   free( stringp_in1 );
+   free( stringp_in2 );
+   free( stringp_in3 );
 
    return( stringp_out );
 }
