@@ -24,6 +24,18 @@
 
 static int count = 0;
 
+char *strdub( const char *src ) {
+
+   char *dst = strdup( src );
+
+   if( dst == NULL ) {
+      perror( "strdup" );
+      exit( EXIT_FAILURE );
+   }
+
+   return( dst );
+}
+
 char *dynamic_printf( const char *fmt, ... ) {
 
    int ret;
@@ -101,17 +113,21 @@ char *handle_network_inet( const u_char *packet ) {
 
    struct ip *header = (struct ip *)packet;
 
-   char *stringp_in = handle_transport_generic(
+   char *stringp_in1 = strdub( inet_ntoa( header->ip_src ) );
+   char *stringp_in2 = strdub( inet_ntoa( header->ip_dst ) );
+   char *stringp_in3 = handle_transport_generic(
       packet + sizeof( struct ip ),
       header->ip_p );
    
    char *stringp_out = dynamic_printf(
       "IP src = %s; IP dst = %s; %s",
-      inet_ntoa( header->ip_src ),
-      inet_ntoa( header->ip_dst ),
-      stringp_in );
+      stringp_in1,
+      stringp_in2,
+      stringp_in3 );
 
-   free( stringp_in );
+   free( stringp_in1 );
+   free( stringp_in2 );
+   free( stringp_in3 );
 
    return( stringp_out );
 }
@@ -187,21 +203,29 @@ char *handle_network_generic( const u_char *payload, int swapped ) {
    }
 }
 
+char *ether_ntoa_nostatic( u_char *ether_host ) {
+   return( strdub( ether_ntoa( (const struct ether_addr *)ether_host ) ) );
+}
+
 char *handle_ethernet( const u_char *packet ) {
 
    struct ether_header *header = (struct ether_header *)packet;
 
-   char *stringp_in = handle_network_generic(
+   char *stringp_in1 = ether_ntoa_nostatic( header->ether_shost );
+   char *stringp_in2 = ether_ntoa_nostatic( header->ether_dhost );
+   char *stringp_in3 = handle_network_generic(
       packet + sizeof( struct ether_header ),
       ntohs( header->ether_type ) );
 
    char *stringp_out = dynamic_printf(
       "MAC src = %s; MAC dst = %s; %s",
-      ether_ntoa( (const struct ether_addr *)header->ether_shost ),
-      ether_ntoa( (const struct ether_addr *)header->ether_dhost ),
-      stringp_in );
+      stringp_in1,
+      stringp_in2,
+      stringp_in3 );
 
-   free( stringp_in );
+   free( stringp_in1 );
+   free( stringp_in2 );
+   free( stringp_in3 );
 
    return( stringp_out );
 }
