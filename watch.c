@@ -59,7 +59,7 @@ char *handle_transport_undef( int ip_type ) {
 }
 
 char *handle_transport_minimal( const char *label ) {
-   return( dynamic_printf( "%s", label ) );
+   return( strdub( label ) );
 }
 
 char *handle_transport_tcp( const u_char *packet ) {
@@ -106,7 +106,7 @@ char *handle_network_undef( int ether_type ) {
 }
 
 char *handle_network_minimal( const char *label ) {
-   return( dynamic_printf( "%s", label ) );
+   return( strdub( label ) );
 }
 
 char *handle_network_inet( const u_char *packet ) {
@@ -149,7 +149,7 @@ char *stringify_inet6_addr( struct in6_addr *addr ) {
       exit( EXIT_FAILURE );
    }
 
-   char *stringp_out = dynamic_printf( "%s", ip );
+   char *stringp_out = strdub( ip );
 
    free( ip );
 
