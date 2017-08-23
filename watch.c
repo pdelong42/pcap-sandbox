@@ -113,17 +113,21 @@ char *handle_network_inet( const u_char *packet ) {
 
    struct ip *header = (struct ip *)packet;
 
-   char *stringp_in = handle_transport_generic(
+   char *stringp_in1 = strdub( inet_ntoa( header->ip_src ) );
+   char *stringp_in2 = strdub( inet_ntoa( header->ip_dst ) );
+   char *stringp_in3 = handle_transport_generic(
       packet + sizeof( struct ip ),
       header->ip_p );
    
    char *stringp_out = dynamic_printf(
       "IP src = %s; IP dst = %s; %s",
-      inet_ntoa( header->ip_src ),
-      inet_ntoa( header->ip_dst ),
-      stringp_in );
+      stringp_in1,
+      stringp_in2,
+      stringp_in3 );
 
-   free( stringp_in );
+   free( stringp_in1 );
+   free( stringp_in2 );
+   free( stringp_in3 );
 
    return( stringp_out );
 }
