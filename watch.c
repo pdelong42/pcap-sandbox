@@ -24,6 +24,18 @@
 
 static int count = 0;
 
+char *strdub( const char *src ) {
+
+   char *dst = strdup( src );
+
+   if( dst == NULL ) {
+      perror( "strdup" );
+      exit( EXIT_FAILURE );
+   }
+
+   return( dst );
+}
+
 char *dynamic_printf( const char *fmt, ... ) {
 
    int ret;
@@ -188,7 +200,7 @@ char *handle_network_generic( const u_char *payload, int swapped ) {
 }
 
 char *ether_ntoa_nostatic( u_char *ether_host ) {
-   return( strdup( ether_ntoa( (const struct ether_addr *)ether_host ) ) );
+   return( strdub( ether_ntoa( (const struct ether_addr *)ether_host ) ) );
 }
 
 char *handle_ethernet( const u_char *packet ) {
