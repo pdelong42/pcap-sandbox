@@ -101,30 +101,7 @@ char *handle_network_undef( int ether_type ) {
    return( dynamic_printf( "unhandled ethertype: 0x%x", ether_type ) );
 }
 
-char *handle_network_inet( const u_char *packet ) {
-
-   struct ip *header = (struct ip *)packet;
-
-   char *stringp_in1 = strdub( inet_ntoa( header->ip_src ) );
-   char *stringp_in2 = strdub( inet_ntoa( header->ip_dst ) );
-   char *stringp_in3 = handle_transport_generic(
-      packet + sizeof( struct ip ),
-      header->ip_p );
-   
-   char *stringp_out = dynamic_printf(
-      "IP src = %s; IP dst = %s; %s",
-      stringp_in1,
-      stringp_in2,
-      stringp_in3 );
-
-   free( stringp_in1 );
-   free( stringp_in2 );
-   free( stringp_in3 );
-
-   return( stringp_out );
-}
-
-char *stringify_inet6_addr( struct in6_addr *addr ) {
+char *stringify_ipaddr( const void *addr, int family, socklen_t size ) {
 
    char *ip = malloc( INET6_ADDRSTRLEN * sizeof(char) );
 
@@ -134,7 +111,7 @@ char *stringify_inet6_addr( struct in6_addr *addr ) {
    }
 
    // this feels like a terrible hack
-   ip = (char *)inet_ntop( AF_INET6, addr, ip, INET6_ADDRSTRLEN );
+   ip = (char *)inet_ntop( family, addr, ip, size );
 
    if( ip == NULL ) {
       perror( "inet_ntop" );
@@ -148,12 +125,44 @@ char *stringify_inet6_addr( struct in6_addr *addr ) {
    return( stringp_out );
 }
 
+char *stringify_ipv4addr( struct in_addr  *addr ) {
+   return( stringify_ipaddr( addr, AF_INET,  INET_ADDRSTRLEN  ) );
+}
+
+char *stringify_ipv6addr( struct in6_addr *addr ) {
+   return( stringify_ipaddr( addr, AF_INET6, INET6_ADDRSTRLEN ) );
+}
+
+char *handle_network_ipv4( const u_char *packet ) {
+
+   struct ip *header = (struct ip *)packet;
+
+   char *stringp_in1 = stringify_ipv4addr( &header->ip_src );
+   char *stringp_in2 = stringify_ipv4addr( &header->ip_dst );
+
+   char *stringp_in3 = handle_transport_generic(
+      packet + sizeof( struct ip ),
+      header->ip_p );
+
+   char *stringp_out = dynamic_printf(
+      "IP src = %s; IP dst = %s; %s",
+      stringp_in1,
+      stringp_in2,
+      stringp_in3 );
+
+   free( stringp_in1 );
+   free( stringp_in2 );
+   free( stringp_in3 );
+
+   return( stringp_out );
+}
+
 char *handle_network_ipv6( const u_char *packet ) {
 
    struct ip6_hdr *header = (struct ip6_hdr *)packet;
 
-   char *stringp_in1 = stringify_inet6_addr( &header->ip6_src );
-   char *stringp_in2 = stringify_inet6_addr( &header->ip6_dst );
+   char *stringp_in1 = stringify_ipv6addr( &header->ip6_src );
+   char *stringp_in2 = stringify_ipv6addr( &header->ip6_dst );
 
    char *stringp_in3 = handle_transport_generic(
       packet + sizeof( struct ip6_hdr ),
@@ -179,7 +188,7 @@ char *handle_network_generic( const u_char *payload, int swapped ) {
 
    switch( swapped ) {
    case ETHERTYPE_IP:
-      return( handle_network_inet( payload ) );
+      return( handle_network_ipv4( payload ) );
    case ETHERTYPE_IPV6:
       return( handle_network_ipv6( payload ) );
    case ETHERTYPE_ARP:
