@@ -248,6 +248,7 @@ int main( int argc, char **argv ) {
       exit( EXIT_FAILURE );
    }
 
+   time_t duration = 0;
    int timeout = 1000, snap = 4096, floozy = 1;
    char errbuf[PCAP_ERRBUF_SIZE] = "";
    pcap_t *handle = pcap_open_live( argv[1], snap, floozy, timeout, errbuf );
@@ -260,12 +261,16 @@ int main( int argc, char **argv ) {
    if( strncmp( errbuf, "", PCAP_ERRBUF_SIZE ) != 0 )
       printf( "WARNING: %s", errbuf );
 
+   if( argv[2] != NULL ) duration = atoi( argv[2] );
+
    int ret = 0;
+   time_t start = time( NULL );
 
    while( ret >= 0 ) {
       ret = pcap_dispatch( handle, 0, callback, NULL );
       time_t now = time( NULL );
       printf( "epoch = %ld; delta = %d; total = %d\n", now, ret, count );
+      if( duration > 0 && now - start > duration ) break;
    }
 
    if( ret == -1 ) {
