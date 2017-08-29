@@ -278,6 +278,8 @@ int main( int argc, char **argv ) {
       exit( EXIT_FAILURE );
    }
 
-   printf( "ERROR: unexpected return value of %d\n", ret );
-   exit( EXIT_FAILURE );
+   if( ret != 0 ) {
+      printf( "ERROR: unexpected return value of %d\n", ret );
+      exit( EXIT_FAILURE );
+   }
 }
