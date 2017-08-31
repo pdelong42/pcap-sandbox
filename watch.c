@@ -92,6 +92,10 @@ char *handle_transport_generic( const u_char *payload, int type ) {
       return( handle_transport_udp( payload ) );
    case IPPROTO_ICMPV6:
       return( strdub( "ICMPv6" ) );
+   case 0x02:
+      return( strdub( "IGMP" ) );
+   case 0x70:
+      return( strdub( "VRRP" ) );
    default:
       return( handle_transport_undef( type ) );
    }
@@ -196,9 +200,11 @@ char *handle_network_generic( const u_char *payload, int swapped ) {
    case ETHERTYPE_REVARP:
       return( strdub( "RARP" ) );
    case ETHERTYPE_VLAN:
-      return( strdub( "802.1Q" ) );
+      return( strdub( "802.1Q (VLAN tag)" ) );
    case ETHERTYPE_LOOPBACK:
       return( strdub( "loopback" ) );
+   case 0x32:
+      return( strdub( "802.1w (Rapid STP)" ) );
    default:
       return( handle_network_undef( swapped ) );
    }
